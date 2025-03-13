@@ -121,7 +121,7 @@
             sizes[resizing + 1] = width2 / $el.offsetWidth * 100
           }
         })
-        const registration = await navigator.serviceWorker.register('preview.js', { scope: './preview' })
+        const registration = await navigator.serviceWorker.register('preview.js', { scope: '/preview' })
         if (registration.active === null) {
           location.reload()
           return
