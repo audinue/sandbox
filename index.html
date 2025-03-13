@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sandbox</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- ANCHOR Styles -->
+    <link
+      rel="shortcut icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1em' height='1em' viewBox='0 0 24 24'%3E%3Cpath fill='currentColor' d='m12 1l9.5 5.5v11L12 23l-9.5-5.5v-11zM5.494 7.078L12 10.844l6.506-3.766L12 3.31zM4.5 8.813v7.534L11 20.11v-7.533zM13 20.11l6.5-3.763V8.813L13 12.576z'/%3E%3C/svg%3E"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: Roboto;
+      }
+      [x-cloak] {
+        opacity: 0;
+      }
+    </style>
+    <!-- ANCHOR Scripts -->
+    <script src="https://unpkg.com/ace-builds@1.39.0/src-min-noconflict/ace.js"></script>
+    <script src="https://unpkg.com/ace-builds@1.39.0/src-min-noconflict/ext-language_tools.js"></script>
+    <script>
+      // Silence tailwind warning
+      const warn = console.warn
+      console.warn = () => {}
+    </script>
+    <script src="https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js"></script>
+    <script>
+      console.warn = warn
+    </script>
+    <script src="https://unpkg.com/idb-keyval@6.2.1/dist/umd.js"></script>
+    <script type="module">
+      import { generateId } from 'https://unpkg.com/@corentinth/friendly-ids@0.0.1/dist/index.mjs'
+      window.generateId = generateId
+      window.newProject = () => {
+        return {
+          name: generateId(),
+          files: [
+            {
+              name: 'index.html',
+              content: `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    Hello world!
+  </body>
+</html>
+`
+            }
+          ]
+        }
+      }
+    </script>
+    <script
+      src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"
+      defer
+    ></script>
+  </head>
+  <body>
+    <!-- ANCHOR Data -->
+    <div
+      x-cloak
+      class="h-screen flex divide-x divide-gray-200 text-gray-600 cursor-default bg-white transition opacity-100"
+      x-data="{
+        enableReset: true,
+        showManager: false,
+        sizes: [20, 40, 40],
+        resizing: -1,
+        projects: [],
+        currentProject: null,
+        currentFile: null,
+        previewFile: null,
+        get files () {
+          return this.currentProject?.files
+        },
+        async save () {
+          await idbKeyval.set('sandbox', {
+            sizes: Alpine.raw(this.sizes),
+            projects: Alpine.raw(this.projects),
+          })
+        },
+        moveProject () {
+          const project = this.currentProject
+          const index = this.projects.indexOf(project)
+          if (index > -1 && index !== 0) {
+            this.projects.splice(index, 1)
+            this.projects.unshift(project)
+          }
+        },
+        sortFiles () {
+          this.files.sort((a, b) => {
+            return a.name.localeCompare(b.name, undefined, {
+              numeric: true,
+              sensitivity: 'base'
+            })
+          })
+        },
+        mouseDown (index) {
+          this.resizing = index
+        },
+      }"
+      x-init="
+        addEventListener('mouseup', async () => {
+          if (resizing !== -1) {
+            resizing = -1
+            await save()
+          }
+        })
+        addEventListener('mousemove', (e) => {
+          if (resizing !== -1) {
+            const width1 = sizes[resizing] / 100 * $el.offsetWidth + e.movementX
+            const width2 = sizes[resizing + 1] / 100 * $el.offsetWidth - e.movementX
+            sizes[resizing] = width1 / $el.offsetWidth * 100
+            sizes[resizing + 1] = width2 / $el.offsetWidth * 100
+          }
+        })
+        const registration = await navigator.serviceWorker.register('preview.js', { scope: './preview' })
+        if (registration.active === null) {
+          location.reload()
+          return
+        }
+        const sandbox = await idbKeyval.get('sandbox') ?? {
+          sizes: [20, 40, 40],
+          projects: []
+        }
+        sizes = sandbox.sizes
+        projects = sandbox.projects
+        if (!projects.length) {
+          projects.push(newProject())
+          await save()
+        }
+        currentProject = projects[0]
+        if (files.length) {
+          currentFile = files[0]
+        }
+        Alpine.effect(() => {
+          currentFile = files?.find(file => file.name === 'README.md')
+            ?? files?.find(file => file.name === 'index.html')
+            ?? files?.[0]
+          previewFile = null
+        })
+        Alpine.effect(() => {
+          const ext = currentFile?.name?.match?.(/\.(.+?)$/)?.[1] ?? ''
+          const previewable = ['html', 'svg', 'png', 'jpg', 'gif', 'md' ]
+          if (previewable.includes(ext)) {
+            $nextTick(() => {
+              previewFile = currentFile
+            })
+          }
+        })
+      "
+    >
+      <!-- ANCHOR Manager Backdrop -->
+      <div
+        class="size-full bg-black/10 absolute inset-0 z-20"
+        x-show="showManager"
+        @click="showManager = false"
+        x-transition:enter="transition"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+      ></div>
+      <!-- ANCHOR Manager -->
+      <div
+        class="min-w-1/5 flex flex-col gap-2 bg-white fixed left-0 top-0 bottom-0 border-r border-slate-300 z-20"
+        x-show="showManager"
+        x-transition:enter="transition"
+        x-transition:enter-start="-translate-x-1/1"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="-translate-x-1/1"
+      >
+        <h1 class="flex bg-gray-100">
+          <span class="grow px-4 py-2">Manager</span>
+          <button
+            title="Reset"
+            class="px-2 cursor-pointer"
+            x-show="enableReset"
+            @click="
+              idbKeyval.del('sandbox')
+              location.reload()
+            "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                d="M2 12c0 5.523 4.477 10 10 10s10-4.477 10-10S17.523 2 12 2v2a8 8 0 1 1-5.135 1.865L9 8V2H3l2.446 2.447A9.98 9.98 0 0 0 2 12"
+              />
+            </svg>
+          </button>
+          <button class="px-2 mr-2 cursor-pointer" @click="showManager = false">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M18 6L6 18M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </h1>
+        <!-- ANCHOR New Project -->
+        <button
+          class="self-end px-2 mr-2 py-1 cursor-pointer"
+          title="New Project"
+          @click="
+              const project = newProject()
+              projects.unshift(project)
+              currentProject = project
+              await save()
+              showManager = false
+            "
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="currentColor"
+              d="M12.414 5H21a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h7.414zM4 5v14h16V7h-8.414l-2-2zm7 7V9h2v3h3v2h-3v3h-2v-3H8v-2z"
+            />
+          </svg>
+        </button>
+        <!-- ANCHOR Projects -->
+        <ul class="grow overflow-auto">
+          <template x-for="project in projects" :key="project.name">
+            <li
+              class="flex"
+              :class="project === currentProject && 'bg-gray-200'"
+              @click="currentProject = project"
+            >
+              <span class="grow px-4 py-1" x-text="project.name"></span>
+              <!-- ANCHOR Duplicate Project -->
+              <button
+                class="px-2 cursor-pointer"
+                title="Duplicate Project"
+                @click.stop="
+                  let n = 2
+                  while (true) {
+                    const name = `${project.name}-${n}`
+                    const found = projects.find(project => project.name === name)
+                    if (!found) {
+                      const next = JSON.parse(JSON.stringify(project))
+                      next.name = name
+                      projects.unshift(next)
+                      currentProject = next
+                      await save()
+                      showManager = false
+                      break
+                    }
+                    n++
+                  }
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                >
+                  <g
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M7 9.667A2.667 2.667 0 0 1 9.667 7h8.666A2.667 2.667 0 0 1 21 9.667v8.666A2.667 2.667 0 0 1 18.333 21H9.667A2.667 2.667 0 0 1 7 18.333z"
+                    />
+                    <path
+                      d="M4.012 16.737A2 2 0 0 1 3 15V5c0-1.1.9-2 2-2h10c.75 0 1.158.385 1.5 1"
+                    />
+                  </g>
+                </svg>
+              </button>
+              <!-- ANCHOR Delete Project -->
+              <button
+                class="px-2 mr-2 cursor-pointer"
+                title="Delete Project"
+                @click.stop="
+                    if (confirm('Are you sure?')) {
+                      const index = projects.indexOf(project)
+                      projects.splice(index, 1)
+                      if (currentProject === project) {
+                        currentProject = projects[Math.min(index, projects.length - 1)]
+                      }
+                      save()
+                    }
+                  "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M17 6h5v2h-2v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8H2V6h5V3a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1zm1 2H6v12h12zm-9 3h2v6H9zm4 0h2v6h-2zM9 4v2h6V4z"
+                  />
+                </svg>
+              </button>
+            </li>
+          </template>
+        </ul>
+      </div>
+      <!-- ANCHOR Explorer -->
+      <div class="grow flex flex-col gap-2" :style="`width: ${sizes[0]}%`">
+        <h1 class="flex bg-gray-100">
+          <span class="grow px-4 py-2">Explorer</span>
+          <button class="px-2 mr-2 cursor-pointer" @click="showManager = true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        </h1>
+        <div class="flex">
+          <!-- ANCHOR Project Name -->
+          <input
+            class="grow outline-none w-full px-4"
+            :value="currentProject?.name"
+            :disabled="!currentProject"
+            @input="
+              const project = projects.find(project => {
+                return project !== currentProject && project.name === $el.value
+              })
+              $el.setCustomValidity(
+                project
+                  ? 'Duplicate project name'
+                  : $el.value === ''
+                    ? 'Empty project name'
+                    : ''
+              )
+              $el.reportValidity()
+            "
+            @input.debounce.750="
+              if ($el.validity.valid) {
+                currentProject.name = $el.value
+                moveProject()
+                save()
+              }
+            "
+          />
+          <!-- ANCHOR New File -->
+          <button
+            class="px-2 mr-2 cursor-pointer"
+            title="New File"
+            :disabled="!currentProject"
+            @click="
+              const name = prompt('Enter new file name', '')
+              if (name) {
+                const file = {
+                  name,
+                  content: ''
+                }
+                files.push(file)
+                currentFile = file
+                sortFiles()
+                moveProject()
+                save()
+              }
+            "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                d="M15 4H5v16h14V8h-4zM3 2.992C3 2.444 3.447 2 3.999 2H16l5 5v13.993A1 1 0 0 1 20.007 22H3.993A1 1 0 0 1 3 21.008zM11 11V8h2v3h3v2h-3v3h-2v-3H8v-2z"
+              />
+            </svg>
+          </button>
+        </div>
+        <!-- ANCHOR Files -->
+        <ul
+          class="grow overflow-auto"
+          @dragover.prevent
+          @drop.prevent="
+            files.push(
+              ...(await Promise.all(
+                [...$event.dataTransfer.files]
+                  .filter(file => !!file.type)
+                  .filter(file => !files.find(f => f.name === file.name))
+                  .map(file => new Promise((resolve, reject) => {
+                    const ext = file.name.match?.(/\.(.+?)$/)?.[1] ?? ''
+                    const isImage = ['png', 'jpg', 'gif'].includes(ext)
+                    const reader = new FileReader()
+                    reader.onload = () => {
+                      resolve({
+                        name: file.name,
+                        content: reader.result
+                      })
+                    }
+                    reader.onerror = () => {
+                      reject(reader.error)
+                    }
+                    if (isImage) {
+                      reader.readAsDataURL(file)
+                    } else {
+                      reader.readAsText(file)
+                    }
+                  }))
+              ))
+            )
+            sortFiles()
+            await save()
+          "
+        >
+          <template x-for="file in files" :key="file.name">
+            <li
+              class="flex"
+              :class="file === currentFile && 'bg-gray-200'"
+              @click="currentFile = file"
+            >
+              <span
+                class="grow px-4 pr-0 py-1 overflow-hidden whitespace-nowrap text-ellipsis"
+                x-text="file.name"
+              ></span>
+              <!-- ANCHOR Duplicate File -->
+              <button
+                class="px-2 cursor-pointer"
+                title="Duplicate File"
+                @click.stop="
+                  const [, prefix, suffix] = file.name.match(/^(.+?)(\.(?:.+?))?$/)
+                  let n = 2
+                  while (true) {
+                    const name = `${prefix}-${n}${suffix ?? ''}`
+                    const found = files.find(file => file.name === name)
+                    if (!found) {
+                      const next = {
+                        name,
+                        content: file.content
+                      }
+                      files.push(next)
+                      currentFile = next
+                      moveProject()
+                      sortFiles()
+                      await save()
+                      break
+                    }
+                    n++
+                  }
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                >
+                  <g
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M7 9.667A2.667 2.667 0 0 1 9.667 7h8.666A2.667 2.667 0 0 1 21 9.667v8.666A2.667 2.667 0 0 1 18.333 21H9.667A2.667 2.667 0 0 1 7 18.333z"
+                    />
+                    <path
+                      d="M4.012 16.737A2 2 0 0 1 3 15V5c0-1.1.9-2 2-2h10c.75 0 1.158.385 1.5 1"
+                    />
+                  </g>
+                </svg>
+              </button>
+              <!-- ANCHOR Rename File -->
+              <button
+                class="px-2 cursor-pointer"
+                title="Rename File"
+                @click.stop="
+                  let name = file.name
+                  while (true) {
+                    name = prompt('Enter new file name', name)
+                    if (name) {
+                      const found = files.find(f => {
+                        return f !== file && f.name === name
+                      })
+                      if (found) {
+                        alert('Duplicate file name')
+                      } else {
+                        file.name = name
+                        moveProject()
+                        sortFiles()
+                        save()
+                        break
+                      }
+                    } else {
+                      break
+                    }
+                  }
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    fill="currentColor"
+                    d="m15.728 9.576l-1.414-1.414L5 17.476v1.414h1.414zm1.414-1.414l1.414-1.414l-1.414-1.414l-1.414 1.414zm-9.9 12.728H3v-4.243L16.435 3.212a1 1 0 0 1 1.414 0l2.829 2.829a1 1 0 0 1 0 1.414z"
+                  />
+                </svg>
+              </button>
+              <!-- ANCHOR Delete File -->
+              <button
+                class="px-2 mr-2 cursor-pointer"
+                title="Delete File"
+                @click.stop="
+                  if (confirm('Are you sure?')) {
+                    const index = files.indexOf(file)
+                    files.splice(index, 1)
+                    if (currentFile === file) {
+                      currentFile = files[Math.max(0, index - 1)]
+                    }
+                    moveProject()
+                    save()
+                  }
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M17 6h5v2h-2v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8H2V6h5V3a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1zm1 2H6v12h12zm-9 3h2v6H9zm4 0h2v6h-2zM9 4v2h6V4z"
+                  />
+                </svg>
+              </button>
+            </li>
+          </template>
+        </ul>
+      </div>
+      <!-- ANCHOR Separator -->
+      <div class="relative" @mousedown.prevent="mouseDown(0)">
+        <div
+          class="absolute w-4 h-full -left-2 bg-black/10 z-10 cursor-e-resize opacity-0 hover:opacity-100 transition"
+        ></div>
+      </div>
+      <!-- ANCHOR Editor -->
+      <div class="grow flex flex-col" :style="`width: ${sizes[1]}%`">
+        <h1 class="px-4 py-2 bg-gray-100">Editor</h1>
+        <div
+          class="grow"
+          x-init="
+            const editor = ace.edit($el, {
+              highlightActiveLine: true,
+              fontFamily: 'Roboto Mono',
+              fontSize: '10pt',
+              showPrintMargin: false,
+              useWorker: false,
+              useWorker: false,
+              scrollPastEnd: true,
+              useSoftTabs: true,
+              tabSize: 2,
+              enableBasicAutocompletion: true,
+              enableSnippets: true,
+            })
+            const session = editor.getSession()
+            const modes = {
+              css: 'css',
+              html: 'html',
+              js: 'javascript',
+              jsx: 'jsx',
+              md: 'markdown',
+              svg: 'svg',
+              ts: 'typescript',
+              tsx: 'tsx',
+              txt: 'text',
+            }
+            Alpine.effect(() => {
+              const ext = currentFile?.name?.match?.(/\.(.+?)$/)?.[1] ?? ''
+              if (ext in modes) {
+                session.setMode(`ace/mode/${modes[ext]}`)
+              } else {
+                session.setMode(`ace/mode/text`)
+              }
+            })
+            Alpine.effect(() => {
+              const ext = currentFile?.name?.match?.(/\.(.+?)$/)?.[1] ?? ''
+              const content = currentFile?.content ?? ''
+              const nonEditable = ['png', 'jpg', 'gif']
+              const editable = !nonEditable.includes(ext)
+              if (editable) {
+                if (session.getValue() !== content) {
+                  session.setValue(content)
+                  editor.focus()
+                }
+              } else {
+                session.setValue('')
+              }
+              editor.setReadOnly(!currentFile || !editable)
+            })
+            const debounce = callback => {
+              let timeout = 0
+              return (...x) => {
+                clearTimeout(timeout)
+                timeout = setTimeout(() => callback(...x), 750)
+              }
+            }
+            editor.on('input', debounce(async () => {
+              const ext = currentFile?.name?.match?.(/\.(.+?)$/)?.[1] ?? ''
+              const nonEditable = ['png', 'jpg', 'gif']
+              const editable = !nonEditable.includes(ext)
+              if (editable && currentFile && session.getValue() !== currentFile?.content) {
+                currentFile.content = session.getValue()
+                moveProject()
+                await save()
+                $refs.iframe.contentWindow.location.reload()
+              }
+            }))
+            new ResizeObserver(() => {
+              editor.resize()
+            }).observe($el.parentNode)
+          "
+        ></div>
+      </div>
+      <!-- ANCHOR Separator -->
+      <div class="relative" @mousedown.prevent="mouseDown(1)">
+        <div
+          class="absolute w-4 h-full -left-2 bg-black/10 z-10 cursor-e-resize opacity-0 hover:opacity-100 transition"
+        ></div>
+      </div>
+      <!-- ANCHOR Preview -->
+      <div class="grow flex flex-col" :style="`width: ${sizes[2]}%`">
+        <h1 class="bg-gray-100 flex">
+          <span class="grow px-4 py-2">Preview</span>
+          <!-- ANCHOR Refresh Preview -->
+          <button
+            title="Refresh Preview"
+            class="px-2 cursor-pointer"
+            @click="$refs.iframe.contentWindow.location.reload()"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                d="M5.463 4.433A9.96 9.96 0 0 1 12 2c5.523 0 10 4.477 10 10c0 2.136-.67 4.116-1.81 5.74L17 12h3A8 8 0 0 0 6.46 6.228zm13.074 15.134A9.96 9.96 0 0 1 12 22C6.477 22 2 17.523 2 12c0-2.136.67-4.116 1.81-5.74L7 12H4a8 8 0 0 0 13.54 5.772z"
+              />
+            </svg>
+          </button>
+          <!-- ANCHOR Open Preview in New Window -->
+          <button
+            title="Open Preview in New Window"
+            class="px-2 mr-2 cursor-pointer"
+            @click="
+              if (previewFile) {
+                open(`${location.origin}/preview/${currentProject.name}/${previewFile.name}`)
+              }
+            "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6m-7 1l9-9m-5 0h5v5"
+              />
+            </svg>
+          </button>
+        </h1>
+        <iframe
+          class="grow"
+          :class="resizing !== -1 && 'pointer-events-none'"
+          x-ref="iframe"
+          :src="previewFile && `${location.origin}/preview/${currentProject.name}/${previewFile.name}`"
+        ></iframe>
+      </div>
+    </div>
+  </body>
+</html>
