@@ -125,7 +125,7 @@ addEventListener('fetch', e => {
   if (cdn.includes(url.hostname)) {
     e.respondWith(getCache(e.request))
   } else {
-    const match = url.pathname.match(/^\/preview\/(.+?)\/(.+?)$/)
+    const match = url.pathname.match(/^\/sandbox\/preview\/(.+?)\/(.+?)$/)
     if (match) {
       e.respondWith(getContent(match[1], match[2]))
     }

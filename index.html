@@ -121,7 +121,7 @@
             sizes[resizing + 1] = width2 / $el.offsetWidth * 100
           }
         })
-        const registration = await navigator.serviceWorker.register('preview.js', { scope: '/preview' })
+        const registration = await navigator.serviceWorker.register('preview.js', { scope: '/sandbox/preview' })
         if (registration.active === null) {
           location.reload()
           return
@@ -718,7 +718,7 @@
           class="grow"
           :class="resizing !== -1 && 'pointer-events-none'"
           x-ref="iframe"
-          :src="previewFile && `${location.origin}/preview/${currentProject.name}/${previewFile.name}`"
+          :src="previewFile && `${location.origin}/sandbox/preview/${currentProject.name}/${previewFile.name}`"
         ></iframe>
       </div>
     </div>
