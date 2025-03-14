@@ -23,15 +23,7 @@
     <!-- ANCHOR Scripts -->
     <script src="https://unpkg.com/ace-builds@1.39.0/src-min-noconflict/ace.js"></script>
     <script src="https://unpkg.com/ace-builds@1.39.0/src-min-noconflict/ext-language_tools.js"></script>
-    <script>
-      // Silence tailwind warning
-      const warn = console.warn
-      console.warn = () => {}
-    </script>
     <script src="https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js"></script>
-    <script>
-      console.warn = warn
-    </script>
     <script src="https://unpkg.com/idb-keyval@6.2.1/dist/umd.js"></script>
     <script type="module">
       import { generateId } from 'https://unpkg.com/@corentinth/friendly-ids@0.0.1/dist/index.mjs'
