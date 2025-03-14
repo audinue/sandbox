@@ -36,6 +36,160 @@
     <script type="module">
       import { generateId } from 'https://unpkg.com/@corentinth/friendly-ids@0.0.1/dist/index.mjs'
       window.generateId = generateId
+      window.templates = [
+        {
+          name: 'welcome',
+          files: [
+            {
+              name: 'README.md',
+              content: `# Welcome
+
+Welcome to the Sandbox!
+`
+            }
+          ]
+        },
+        {
+          name: 'vanilla',
+          files: [
+            {
+              name: 'index.css',
+              content: ''
+            },
+            {
+              name: 'index.html',
+              content: `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="index.css">
+    <script src="index.js" type="module"><\/script>
+  </head>
+  <body>
+    <p>Hello world!</p>
+  </body>
+</html>
+`
+            },
+            {
+              name: 'index.js',
+              content: ''
+            }
+          ]
+        },
+        {
+          name: 'alpinejs',
+          files: [
+            {
+              name: 'index.html',
+              content: `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" defer><\/script>
+  </head>
+  <body>
+    <p x-data="{ message: 'Hello world!' }" x-text="message"></p>
+  </body>
+</html>
+`
+            }
+          ]
+        },
+        {
+          name: 'alpinejs-tailwind',
+          files: [
+            {
+              name: 'index.html',
+              content: `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js" defer><\/script>
+    <script src="https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js"><\/script>
+  </head>
+  <body>
+    <p
+      class="m-4 h-64 rounded-lg flex justify-center items-center bg-slate-200 text-slate-500 font-bold"
+      x-data="{ message: 'Hello world!' }"
+      x-text="message"
+    ></p>
+  </body>
+</html>
+`
+            }
+          ]
+        },
+        {
+          name: 'react',
+          files: [
+            {
+              name: 'index.html',
+              content: `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="index.jsx" type="module"><\/script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+`
+            },
+            {
+              name: 'index.jsx',
+              content: `import React from 'https://esm.sh/react@19.0.0/es2022/react.mjs'
+import { createRoot } from 'https://esm.sh/react-dom@19.0.0/es2022/client.mjs'
+
+createRoot(document.getElementById('root'))
+  .render(<p>Hello world!</p>)
+`
+            }
+          ]
+        },
+        {
+          name: 'react-tailwind',
+          files: [
+            {
+              name: 'index.html',
+              content: `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="index.jsx" type="module"><\/script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+`
+            },
+            {
+              name: 'index.jsx',
+              content: `import React from 'https://esm.sh/react@19.0.0/es2022/react.mjs'
+import { createRoot } from 'https://esm.sh/react-dom@19.0.0/es2022/client.mjs'
+
+import 'https://esm.sh/@tailwindcss/browser@4.0.12/es2022/browser.mjs'
+
+createRoot(document.getElementById('root'))
+  .render(
+    <p
+      className="m-4 h-64 rounded-lg flex justify-center items-center bg-slate-200 text-slate-500 font-bold"
+    >
+      Hello world!
+    </p>
+  )
+`
+            }
+          ]
+        }
+      ]
       window.newProject = () => {
         return {
           name: generateId(),
@@ -133,7 +287,7 @@
         sizes = sandbox.sizes
         projects = sandbox.projects
         if (!projects.length) {
-          projects.push(newProject())
+          projects.push(...templates)
           await save()
         }
         currentProject = projects[0]
