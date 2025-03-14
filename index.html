@@ -328,6 +328,7 @@ createRoot(document.getElementById('root'))
       >
         <h1 class="flex bg-gray-100">
           <span class="grow px-4 py-2">Manager</span>
+          <!-- ANCHOR Reset -->
           <button
             title="Reset"
             class="px-2 cursor-pointer"
@@ -349,7 +350,12 @@ createRoot(document.getElementById('root'))
               />
             </svg>
           </button>
-          <button class="px-2 mr-2 cursor-pointer" @click="showManager = false">
+          <!-- ANCHOR Close Manager -->
+          <button
+            title="Close Manager"
+            class="px-2 mr-2 cursor-pointer"
+            @click="showManager = false"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -479,7 +485,12 @@ createRoot(document.getElementById('root'))
       <div class="grow flex flex-col gap-2" :style="`width: ${sizes[0]}%`">
         <h1 class="flex bg-gray-100">
           <span class="grow px-4 py-2">Explorer</span>
-          <button class="px-2 mr-2 cursor-pointer" @click="showManager = true">
+          <!-- ANCHOR Show Manager -->
+          <button
+            title="Show Manager"
+            class="px-2 mr-2 cursor-pointer"
+            @click="showManager = true"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -860,6 +871,7 @@ createRoot(document.getElementById('root'))
             </svg>
           </button>
         </h1>
+        <!-- ANCHOR Preview Iframe -->
         <iframe
           class="grow"
           :class="resizing !== -1 && 'pointer-events-none'"
