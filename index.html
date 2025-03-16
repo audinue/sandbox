@@ -220,7 +220,7 @@ createRoot(document.getElementById('root'))
       }
     </script>
   </head>
-  <body>
+  <body class="[&::selection]:bg-gray-500 [&::selection]:text-white">
     <!-- ANCHOR Data -->
     <div
       x-cloak
@@ -460,7 +460,7 @@ createRoot(document.getElementById('root'))
           <template x-for="project in projects" :key="project.name">
             <li
               class="flex"
-              :class="project === currentProject && 'bg-gray-200'"
+              :class="project === currentProject && 'bg-gray-100'"
               @click="currentProject = project"
             >
               <span class="grow px-4 py-1" x-text="project.name"></span>
@@ -569,7 +569,7 @@ createRoot(document.getElementById('root'))
         <div class="flex">
           <!-- ANCHOR Project Name -->
           <input
-            class="grow outline-none w-full px-4"
+            class="grow outline-none bg-gray-100 rounded-t w-full ml-2 px-2 p-y-1"
             :value="currentProject?.name"
             :disabled="!currentProject"
             @input="
@@ -664,7 +664,7 @@ createRoot(document.getElementById('root'))
           <template x-for="file in files" :key="file.name">
             <li
               class="flex"
-              :class="file === currentFile && 'bg-gray-200'"
+              :class="file === currentFile && 'bg-gray-100'"
               @click="currentFile = file"
             >
               <span
@@ -978,25 +978,25 @@ createRoot(document.getElementById('root'))
           x-transition:enter-start="scale-90"
           x-transition:enter-end="scale-100"
           x-transition:leave="transition"
-          x-transition:leave-start="scale-90"
-          x-transition:leave-end="scale-100"
+          x-transition:leave-start="scale-100"
+          x-transition:leave-end="scale-90"
           @submit.prevent
         >
           <div x-text="promptState.message"></div>
           <input
-            class="p-2 border rounded"
+            class="p-2 bg-gray-100 rounded-t outline-none"
             autofocus
             x-model="promptState.value"
           />
           <div class="self-end flex gap-2">
             <button
-              class="rounded bg-gray-500 px-6 py-1 outline-gray-700 focus:outline text-white"
+              class="cursor-pointer rounded bg-gray-500 px-6 py-1 outline-gray-700 focus:outline text-white"
               @click="promptState.onSubmit(promptState.value)"
             >
               Yes
             </button>
             <button
-              class="rounded bg-gray-200 px-6 py-1 outline-gray-700 focus:outline"
+              class="cursor-pointer rounded bg-gray-100 px-6 py-1 outline-gray-700 focus:outline"
               @click="promptState.onSubmit(null)"
             >
               No
@@ -1025,19 +1025,19 @@ createRoot(document.getElementById('root'))
           x-transition:enter-start="scale-90"
           x-transition:enter-end="scale-100"
           x-transition:leave="transition"
-          x-transition:leave-start="scale-90"
-          x-transition:leave-end="scale-100"
+          x-transition:leave-start="scale-100"
+          x-transition:leave-end="scale-90"
         >
           <div x-text="confirmState.message"></div>
           <div class="self-end flex gap-2">
             <button
-              class="rounded bg-gray-500 px-6 py-1 outline-gray-700 focus:outline text-white"
+              class="cursor-pointer rounded bg-gray-500 px-6 py-1 outline-gray-700 focus:outline text-white"
               @click="confirmState.onSubmit(true)"
             >
               Yes
             </button>
             <button
-              class="rounded bg-gray-200 px-6 py-1 outline-gray-700 focus:outline"
+              class="cursor-pointer rounded bg-gray-100 px-6 py-1 outline-gray-700 focus:outline"
               @click="confirmState.onSubmit(false)"
               autofocus
             >
@@ -1067,13 +1067,13 @@ createRoot(document.getElementById('root'))
           x-transition:enter-start="scale-90"
           x-transition:enter-end="scale-100"
           x-transition:leave="transition"
-          x-transition:leave-start="scale-90"
-          x-transition:leave-end="scale-100"
+          x-transition:leave-start="scale-100"
+          x-transition:leave-end="scale-90"
         >
           <div x-text="alertState.message"></div>
           <div class="self-end flex gap-2">
             <button
-              class="rounded bg-gray-500 px-6 py-1 outline-gray-700 focus:outline text-white"
+              class="cursor-pointer rounded bg-gray-500 px-6 py-1 outline-gray-700 focus:outline text-white"
               @click="alertState.onSubmit"
             >
               OK
