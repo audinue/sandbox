@@ -59,6 +59,26 @@ const getMarkdown = content => {
 
 const transform = ['jsx', 'ts', 'tsx']
 
+Babel.registerPlugin('transform-esm-sh', () => {
+  return {
+    visitor: {
+      ImportDeclaration (path) {
+        const source = path.get('source')
+        const value = source.node.value
+        if (
+          value.startsWith('.') ||
+          value.startsWith('/') ||
+          value.startsWith('http://') ||
+          value.startsWith('https://')
+        ) {
+          return
+        }
+        path.get('source').replaceWithSourceString(`'https://esm.sh/${value}'`)
+      }
+    }
+  }
+})
+
 const getTransformed = async (url, content) => {
   return Babel.transform(content, {
     filename: url,
@@ -76,7 +96,8 @@ const getTransformed = async (url, content) => {
           modules: false
         }
       ]
-    ]
+    ],
+    plugins: ['transform-esm-sh']
   }).code
 }
 
