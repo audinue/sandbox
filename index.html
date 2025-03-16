@@ -21,6 +21,13 @@
       }
     </style>
     <!-- ANCHOR Scripts -->
+    <script src="https://unpkg.com/prettier@3.5.3/standalone.js"></script>
+    <script src="https://unpkg.com/prettier@3.5.3/plugins/estree.js"></script>
+    <script src="https://unpkg.com/prettier@3.5.3/plugins/babel.js"></script>
+    <script src="https://unpkg.com/prettier@3.5.3/plugins/typescript.js"></script>
+    <script src="https://unpkg.com/prettier@3.5.3/plugins/html.js"></script>
+    <script src="https://unpkg.com/prettier@3.5.3/plugins/markdown.js"></script>
+    <script src="https://unpkg.com/prettier@3.5.3/plugins/postcss.js"></script>
     <script src="https://unpkg.com/ace-builds@1.39.0/src-min-noconflict/ace.js"></script>
     <script src="https://unpkg.com/ace-builds@1.39.0/src-min-noconflict/ext-language_tools.js"></script>
     <script src="https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js"></script>
@@ -807,7 +814,26 @@ createRoot(document.getElementById('root'))
               tabSize: 2,
               enableBasicAutocompletion: true,
               enableSnippets: true,
-              keyboardHandler: 'ace/keyboard/sublime',
+              keyboardHandler: 'ace/keyboard/sublime'
+            })
+            editor.commands.addCommand(
+            {
+              name: 'Format Code',
+              async exec () {
+                const position = editor.getCursorPosition()
+                const index = editor.session.doc.positionToIndex(position)
+                const { formatted, cursorOffset } = await prettier.formatWithCursor(
+                  editor.session.getValue(),
+                  {
+                    cursorOffset: index,
+                    filepath: currentFile.name,
+                    plugins: Object.values(prettierPlugins),
+                  }
+                )
+                editor.session.setValue(formatted)
+                editor.moveCursorToPosition(editor.session.doc.indexToPosition(cursorOffset))
+              },
+              bindKey: 'Alt+Shift+F',
             })
             const session = editor.getSession()
             const modes = {

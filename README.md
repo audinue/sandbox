@@ -12,6 +12,7 @@ PR welcome!
 ### Features
 
 - ✔ File drop
+- ✔ Format code
 - ✔ Preview images
 - ✔ Duplicate project or file
 - ✔ Everything is done locally
