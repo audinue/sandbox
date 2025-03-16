@@ -135,8 +135,8 @@ Welcome to the Sandbox!
             },
             {
               name: 'index.jsx',
-              content: `import React from 'https://esm.sh/react@19.0.0/es2022/react.mjs'
-import { createRoot } from 'https://esm.sh/react-dom@19.0.0/es2022/client.mjs'
+              content: `import React from 'react'
+import { createRoot } from 'react-dom/client'
 
 createRoot(document.getElementById('root'))
   .render(<p>Hello world!</p>)
@@ -164,10 +164,10 @@ createRoot(document.getElementById('root'))
             },
             {
               name: 'index.jsx',
-              content: `import React from 'https://esm.sh/react@19.0.0/es2022/react.mjs'
-import { createRoot } from 'https://esm.sh/react-dom@19.0.0/es2022/client.mjs'
+              content: `import React from 'react'
+import { createRoot } from 'react-dom/client'
 
-import 'https://esm.sh/@tailwindcss/browser@4.0.12/es2022/browser.mjs'
+import '@tailwindcss/browser'
 
 createRoot(document.getElementById('root'))
   .render(
