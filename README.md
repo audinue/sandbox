@@ -11,13 +11,14 @@ PR welcome!
 
 ### Features
 
-- ✔ Transforms JSX and TypeScript
-- ✔ Renders markdown
 - ✔ File drop
 - ✔ Preview images
-- ✔ Persistent resizable layout
+- ✔ Renders markdown
 - ✔ Duplicate project or file
 - ✔ Everything is done locally
+- ✔ Persistent resizable layout
+- ✔ Transforms JSX and TypeScript
+- ✔ Transforms bare specifiers to https://esm.sh/
 
 ### Credits
 
