@@ -16,12 +16,23 @@ marked.use(
   markedHighlight.markedHighlight({
     emptyLangClass: 'hljs',
     langPrefix: 'hljs language-',
-    highlight (code, lang, info) {
+    highlight (code, lang) {
       const language = hljs.getLanguage(lang) ? lang : 'plaintext'
       return hljs.highlight(code, { language }).value
     }
   })
 )
+
+marked.use({
+  renderer: {
+    code (code) {
+      if (code.lang === 'mermaid') {
+        return `<pre class="mermaid">${code.text}</pre>`
+      }
+      return false
+    }
+  }
+})
 
 const cdn = [
   'esm.sh',
@@ -68,6 +79,7 @@ const getMarkdown = content => {
         }
       }
     </style>
+    <script src="https://unpkg.com/mermaid@11.5.0/dist/mermaid.min.js"></script>
   </head>
   <body class="markdown-body">
     ${marked.parse(content)}
