@@ -325,7 +325,7 @@ createRoot(document.getElementById('root'))
             sizes[resizing + 1] = width2 / $el.offsetWidth * 100
           }
         })
-        const registration = await navigator.serviceWorker.register('preview.js', { scope: '/sandbox/preview' })
+        const registration = await navigator.serviceWorker.register('preview.js', { scope: location.pathname })
         if (registration.active === null) {
           location.reload()
           return
@@ -885,7 +885,18 @@ createRoot(document.getElementById('root'))
                 currentFile.content = session.getValue()
                 moveProject()
                 await save()
-                $refs.iframe.contentWindow.location.reload()
+                if (ext === 'md') {
+                  const window = $refs.iframe.contentWindow
+                  const response = await fetch(window.location.href)
+                  const text = await response.text()
+                  const document = new DOMParser().parseFromString(text, 'text/html')
+                  window.document.body.innerHTML = document.body.innerHTML
+                  await window.mermaid.run({
+                    nodes: window.document.querySelectorAll('.mermaid')
+                  })
+                } else {
+                  $refs.iframe.contentWindow.location.reload()
+                }
               }
             }))
             new ResizeObserver(() => {
