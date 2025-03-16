@@ -1,5 +1,9 @@
 importScripts('https://unpkg.com/idb-keyval@6.2.1/dist/umd.js')
 importScripts('https://unpkg.com/marked@15.0.7/marked.min.js')
+importScripts('https://unpkg.com/marked-highlight@2.2.1/lib/index.umd.js')
+importScripts(
+  'https://unpkg.com/@highlightjs/cdn-assets@11.11.1/highlight.min.js'
+)
 importScripts('https://unpkg.com/@babel/standalone@7.26.10/babel.min.js')
 
 marked.use({
@@ -7,6 +11,17 @@ marked.use({
   breaks: true,
   silent: true
 })
+
+marked.use(
+  markedHighlight.markedHighlight({
+    emptyLangClass: 'hljs',
+    langPrefix: 'hljs language-',
+    highlight (code, lang, info) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+      return hljs.highlight(code, { language }).value
+    }
+  })
+)
 
 const cdn = [
   'esm.sh',
@@ -35,20 +50,24 @@ const getMarkdown = content => {
 <html>
   <head>
     <link rel="stylesheet" href="https://unpkg.com/github-markdown-css@5.8.1/github-markdown.css">
-  <style>
-    .markdown-body {
-      box-sizing: border-box;
-      min-width: 200px;
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 45px;
-    }
-    @media (max-width: 767px) {
+    <link rel="stylesheet" href="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/styles/github.min.css">
+    <style>
       .markdown-body {
-        padding: 15px;
+        box-sizing: border-box;
+        min-width: 200px;
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 45px;
       }
-    }
-  </style>
+      .markdown-body pre {
+        padding: 0;
+      }
+      @media (max-width: 767px) {
+        .markdown-body {
+          padding: 15px;
+        }
+      }
+    </style>
   </head>
   <body class="markdown-body">
     ${marked.parse(content)}
