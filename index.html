@@ -599,17 +599,30 @@ createRoot(document.getElementById('root'))
             title="New File"
             :disabled="!currentProject"
             @click="
-              const name = await prompt('Enter new file name', '')
-              if (name) {
-                const file = {
-                  name,
-                  content: ''
+              let name = ''
+              while (true) {
+                name = await prompt('Enter new file name', name)
+                if (name) {
+                  const found = files.find(f => {
+                    return f.name === name
+                  })
+                  if (found) {
+                    await alert('Duplicate file name')
+                  } else {
+                    const file = {
+                      name,
+                      content: ''
+                    }
+                    files.push(file)
+                    currentFile = file
+                    sortFiles()
+                    moveProject()
+                    save()
+                    break
+                  }
+                } else {
+                  break
                 }
-                files.push(file)
-                currentFile = file
-                sortFiles()
-                moveProject()
-                save()
               }
             "
           >
