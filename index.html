@@ -33,10 +33,6 @@
     <script src="https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js"></script>
     <script src="https://unpkg.com/idb-keyval@6.2.1/dist/umd.js"></script>
     <script
-      src="https://unpkg.com/@alpinejs/focus@3.14.9/dist/cdn.min.js"
-      defer
-    ></script>
-    <script
       src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"
       defer
     ></script>
@@ -344,11 +340,15 @@ createRoot(document.getElementById('root'))
         if (files.length) {
           currentFile = files[0]
         }
+        let previousProject = null
         Alpine.effect(() => {
-          currentFile = files?.find(file => file.name === 'README.md')
-            ?? files?.find(file => file.name === 'index.html')
-            ?? files?.[0]
-          previewFile = null
+          if (previousProject !== currentProject) {
+            previousProject = currentProject
+            currentFile = files?.find(file => file.name === 'README.md')
+              ?? files?.find(file => file.name === 'index.html')
+              ?? files?.[0]
+            previewFile = null
+          }
         })
         Alpine.effect(() => {
           const ext = currentFile?.name?.match?.(/\.(.+?)$/)?.[1] ?? ''
@@ -876,8 +876,8 @@ createRoot(document.getElementById('root'))
               if (editable) {
                 if (session.getValue() !== content) {
                   session.setValue(content)
-                  editor.focus()
                 }
+                editor.focus()
               } else {
                 session.setValue('')
               }
@@ -985,7 +985,6 @@ createRoot(document.getElementById('root'))
       <div
         class="fixed inset-0 bg-black/10 p-4 flex items-center justify-center z-30"
         x-show="promptState.show"
-        x-trap="promptState.show"
         @click.self="promptState.onSubmit(null)"
         @keydown.escape="promptState.onSubmit(null)"
         x-transition:enter="transition"
@@ -1009,8 +1008,12 @@ createRoot(document.getElementById('root'))
           <div x-text="promptState.message"></div>
           <input
             class="p-2 bg-gray-100 rounded-t outline-none"
-            autofocus
             x-model="promptState.value"
+            x-effect="
+              if (promptState.show) {
+                $nextTick(() => $el.focus())
+              }
+            "
           />
           <div class="self-end flex gap-2">
             <button
@@ -1032,7 +1035,6 @@ createRoot(document.getElementById('root'))
       <div
         class="fixed inset-0 bg-black/10 p-4 flex items-center justify-center z-30"
         x-show="confirmState.show"
-        x-trap="confirmState.show"
         @click.self="confirmState.onSubmit(false)"
         @keydown.escape="confirmState.onSubmit(false)"
         x-transition:enter="transition"
@@ -1063,7 +1065,11 @@ createRoot(document.getElementById('root'))
             <button
               class="cursor-pointer rounded bg-gray-100 px-6 py-1 outline-gray-700 focus:outline"
               @click="confirmState.onSubmit(false)"
-              autofocus
+              x-effect="
+                if (confirmState.show) {
+                  $nextTick(() => $el.focus())
+                }
+              "
             >
               No
             </button>
@@ -1074,7 +1080,6 @@ createRoot(document.getElementById('root'))
       <div
         class="fixed inset-0 bg-black/10 p-4 flex items-center justify-center z-30"
         x-show="alertState.show"
-        x-trap="alertState.show"
         @click.self="alertState.onSubmit"
         @keydown.escape="alertState.onSubmit"
         x-transition:enter="transition"
@@ -1099,6 +1104,11 @@ createRoot(document.getElementById('root'))
             <button
               class="cursor-pointer rounded bg-gray-500 px-6 py-1 outline-gray-700 focus:outline text-white"
               @click="alertState.onSubmit"
+              x-effect="
+                if (alertState.show) {
+                  $nextTick(() => $el.focus())
+                }
+              "
             >
               OK
             </button>
