@@ -32,10 +32,6 @@
     <script src="https://unpkg.com/ace-builds@1.39.0/src-min-noconflict/ext-language_tools.js"></script>
     <script src="https://unpkg.com/@tailwindcss/browser@4.0.12/dist/index.global.js"></script>
     <script src="https://unpkg.com/idb-keyval@6.2.1/dist/umd.js"></script>
-    <script
-      src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"
-      defer
-    ></script>
     <script type="module">
       import { generateId } from 'https://unpkg.com/@corentinth/friendly-ids@0.0.1/dist/index.mjs'
       window.generateId = generateId
@@ -215,6 +211,10 @@ createRoot(document.getElementById('root'))
         }
       }
     </script>
+    <script
+      src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"
+      defer
+    ></script>
   </head>
   <body class="[&::selection]:bg-gray-500 [&::selection]:text-white">
     <!-- ANCHOR Data -->
@@ -230,6 +230,7 @@ createRoot(document.getElementById('root'))
         currentProject: null,
         currentFile: null,
         previewFile: null,
+        previewLocalhost: false,
         promptState: {
           show: false,
           message: 'Enter file name:',
@@ -307,6 +308,25 @@ createRoot(document.getElementById('root'))
         },
       }"
       x-init="
+        const ws = new WebSocket('ws://localhost:6543');
+        ws.onopen = () => {
+          previewLocalhost = true
+        };
+        ws.onmessage = async (e) => {
+          const req = JSON.parse(e.data);
+          const res = await fetch(req.path);
+          const blob = await res.blob();
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const data = JSON.stringify({
+              id: req.id,
+              type: res.headers.get('content-type'),
+              body: reader.result,
+            });
+            ws.send(data);
+          };
+          reader.readAsDataURL(blob);
+        };
         addEventListener('mouseup', async () => {
           if (resizing !== -1) {
             resizing = -1
@@ -949,7 +969,7 @@ createRoot(document.getElementById('root'))
           <!-- ANCHOR Open Preview in New Window -->
           <button
             title="Open Preview in New Window"
-            class="px-2 mr-2 cursor-pointer"
+            class="px-2 cursor-pointer"
             @click="
               if (previewFile) {
                 open(`${location.origin}/sandbox/preview/${currentProject.name}/${previewFile.name}`)
@@ -969,6 +989,29 @@ createRoot(document.getElementById('root'))
                 stroke-linejoin="round"
                 stroke-width="2"
                 d="M12 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6m-7 1l9-9m-5 0h5v5"
+              />
+            </svg>
+          </button>
+          <!-- ANCHOR Open Localhost Preview -->
+          <button
+            title="Open Localhost Preview"
+            class="px-2 mr-2 cursor-pointer"
+            x-show="previewLocalhost"
+            @click="
+              if (previewFile) {
+                open(`http://localhost:6543/sandbox/preview/${currentProject.name}/${previewFile.name}`)
+              }
+            "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                d="M.69 6.997A17.93 17.93 0 0 1 12 3c4.285 0 8.22 1.497 11.31 3.997l-1.256 1.556A15.93 15.93 0 0 0 12 5C8.19 5 4.694 6.33 1.946 8.553zm3.141 3.89A12.95 12.95 0 0 1 12 8a12.95 12.95 0 0 1 8.169 2.886l-1.257 1.556A10.95 10.95 0 0 0 12 10c-2.618 0-5.023.915-6.912 2.442zm3.142 3.89A7.97 7.97 0 0 1 12 13c1.904 0 3.653.665 5.027 1.776l-1.257 1.556A5.98 5.98 0 0 0 12 15c-1.428 0-2.74.499-3.77 1.332zm3.142 3.89A3 3 0 0 1 12 18c.714 0 1.37.25 1.885.666L12 21z"
               />
             </svg>
           </button>
