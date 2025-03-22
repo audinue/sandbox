@@ -147,7 +147,7 @@ const getContent = async (projectName, fileName) => {
           ? getMarkdown(file.content)
           : transform.includes(ext)
           ? await getTransformed(
-              `/preview/${projectName}/${fileName}`,
+              `/sandbox/preview/${projectName}/${fileName}`,
               file.content
             )
           : image.includes(ext)
